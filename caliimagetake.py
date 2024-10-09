@@ -1,39 +1,45 @@
 import cv2
-import numpy as np
+import os
 
-# Raspberry Pi IP address updated
-raspberry_pi_ip = "http://192.168.1.42:5000/video_feed"
+# Define parameters for the chessboard
+chessboard_size = (9, 6)  # (number of inner corners per chessboard row and column)
 
-# Capture video from the Raspberry Pi stream
-cap = cv2.VideoCapture(raspberry_pi_ip)
+# Create a directory to save calibration images if it doesn't exist
+save_folder = 'calibration_images'
+os.makedirs(save_folder, exist_ok=True)
 
-# Counter to keep track of saved images
-image_counter = 0
+# Set the video stream URL for the Raspberry Pi camera
+video_stream_url = 'http://192.168.1.42:5000/video_feed'  # Adjust if necessary
+
+# Start capturing images from the video stream
+cap = cv2.VideoCapture(video_stream_url)
+
+if not cap.isOpened():
+    print("Error: Could not open video stream.")
+    exit()
+
+print("Press 's' to save images of the chessboard pattern, 'q' to quit.")
 
 while True:
-    # Read a frame from the stream
-    success, frame = cap.read()
-    if not success:
-        print("Failed to grab frame")
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Could not read frame.")
         break
 
-    # Display the live video stream
-    cv2.imshow("Raspberry Pi Camera Stream", frame)
+    # Display the live frame
+    cv2.imshow('Chessboard', frame)
 
-    # Wait for keypress
-    key = cv2.waitKey(1) & 0xFF
-
-    # If 's' key is pressed, save the current frame as a calibration image
+    # Press 's' to save the image and 'q' to quit
+    key = cv2.waitKey(1)
     if key == ord('s'):
-        image_filename = f'calibration_images/calibration_image_{image_counter}.jpg'
-        cv2.imwrite(image_filename, frame)
-        print(f"Saved {image_filename}")
-        image_counter += 1
-
-    # If 'q' key is pressed, quit the loop
-    if key == ord('q'):
+        img_name = os.path.join(save_folder, f'calibration_image_{len(os.listdir(save_folder)) + 1}.png')
+        cv2.imwrite(img_name, frame)  # Save the raw frame without any markings
+        print(f"Saved image: {img_name}")
+    elif key == ord('q'):
         break
 
-# Release the capture and close windows
+# Release the video stream and close all windows
 cap.release()
 cv2.destroyAllWindows()
+
+print(f"Saved images in {save_folder}. You can now proceed with calibration.")
