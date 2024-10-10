@@ -7,8 +7,9 @@ picam2 = Picamera2()
 
 # Configure the camera
 picam2.configure(picam2.create_video_configuration(main={"size": (1280, 720)}))
-picam2.set_controls({"AfMode": 0 ,"AfTrigger": 0,"LensPosition": 0.1})
+picam2.set_controls({"AfMode": 0, "AfTrigger": 0, "LensPosition": 0.1})
 picam2.start()
+
 
 def generate_frames():
     while True:
@@ -20,14 +21,19 @@ def generate_frames():
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
         # Encode the frame as JPEG
-        _, buffer = cv2.imencode('.jpg', frame)
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        _, buffer = cv2.imencode(".jpg", frame)
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+        )
 
-@app.route('/video_feed')
+
+@app.route("/video_feed")
 def video_feed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(
+        generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)  # Use your Raspberry Pi's IP address
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)  # Use your Raspberry Pi's IP address
